@@ -1,0 +1,94 @@
+# Build directories
+build/
+build-*/
+cmake-build-*/
+
+# Qt specific
+*.pro.user
+*.pro.user.*
+*.qmlc
+*.jsc
+*.moc
+*.moc.cpp
+*.ui.h
+*.qrc.depends
+*.qrc.o
+*.qm
+
+# Qt Creator
+*.creator
+*.creator.user
+*.creator.user.*
+*.files
+*.includes
+.QtCreator
+.QtCreator.user
+QtCreator
+QtCreator.user
+# Ignore the .qtcreator directory if it exists at the root
+.qtcreator/
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+compile_commands.json
+.install/
+.prefix/
+
+# CMake specific user files
+CMakeLists.txt.user*
+# This will ignore CMakeLists.txt.user, CMakeLists.txt.user.8b7bd6c, etc.
+
+# Qt binaries and libraries
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.a
+*.lib
+
+# IDE specific
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS specific
+.DS_Store
+Thumbs.db
+ehthumbs.db
+.Spotlight-V100
+.Trashes
+*.DS_Store*
+
+# Temporary files
+*.tmp
+*.temp
+*~
+\#*\#
+*.bak
+*.backup
+
+# Qt resource compilation
+qrc_*.cxx
+qrc_*.cpp
+qrc_*.h
+
+# Debug/Release builds
+debug/
+release/
+Debug/
+Release/
+
+# Qt webassembly
+wasm_*/
+
+# Additional Qt files
+moc_*.cpp
+moc_*.h
+ui_*.h
+qrc_*.cpp
