@@ -47,7 +47,7 @@ MainWindow::MainWindow(Backend* backend, QWidget* parent)
         f.setPointSize(22);
         f.setBold(true);
         label->setFont(f);
-        label->setContentsMargins(0, 0, 0, 8);
+        label->setContentsMargins(0, 6, 0, 8);
         return label;
     };
 
@@ -93,11 +93,11 @@ MainWindow::MainWindow(Backend* backend, QWidget* parent)
     gasFrame->setMaximumWidth(180);
 
     m_gasBar = new UsageBar(gasFrame);
-    m_gasLabel = new QLabel("-- m³", gasFrame);
+    m_gasLabel = new QLabel("0.0 m³", gasFrame);
     m_gasLabel->setAlignment(Qt::AlignCenter);
 
     QFont gasLabelFont = m_gasLabel->font();
-    gasLabelFont.setPointSize(22);
+    gasLabelFont.setPointSize(26);
     gasLabelFont.setBold(true);
     m_gasLabel->setFont(gasLabelFont);
 
@@ -130,7 +130,7 @@ MainWindow::MainWindow(Backend* backend, QWidget* parent)
     m_powerLabel->setAlignment(Qt::AlignCenter);
 
     QFont powerLabelFont = m_powerLabel->font();
-    powerLabelFont.setPointSize(22);
+    powerLabelFont.setPointSize(26);
     powerLabelFont.setBold(true);
     m_powerLabel->setFont(powerLabelFont);
 
