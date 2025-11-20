@@ -97,7 +97,7 @@ MainWindow::MainWindow(Backend* backend, QWidget* parent)
     m_gasLabel->setAlignment(Qt::AlignCenter);
 
     QFont gasLabelFont = m_gasLabel->font();
-    gasLabelFont.setPointSize(36);
+    gasLabelFont.setPointSize(22);
     gasLabelFont.setBold(true);
     m_gasLabel->setFont(gasLabelFont);
 
@@ -130,7 +130,7 @@ MainWindow::MainWindow(Backend* backend, QWidget* parent)
     m_powerLabel->setAlignment(Qt::AlignCenter);
 
     QFont powerLabelFont = m_powerLabel->font();
-    powerLabelFont.setPointSize(36);
+    powerLabelFont.setPointSize(22);
     powerLabelFont.setBold(true);
     m_powerLabel->setFont(powerLabelFont);
 
@@ -237,9 +237,8 @@ MainWindow::MainWindow(Backend* backend, QWidget* parent)
     });
 
     // Optional: forward manual changes from dial back to backend
-    connect(m_thermo, &ThermostatDial::setpointEdited, this, [this](double sp){
-        // m_backend->setSetpoint(sp);
-    });
+    connect(m_thermo, &ThermostatDial::setpointEdited,
+            m_backend, &Backend::setThermostatSetpoint);
 
     setWindowTitle("Toon-like Dashboard (Qt Widgets)");
     resize(1024, 768);

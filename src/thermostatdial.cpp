@@ -9,6 +9,21 @@ ThermostatDial::ThermostatDial(QWidget* parent)
 {
 }
 
+void ThermostatDial::setSetpoint(double v)
+{
+    if (m_ignoreSetpointUpdates)
+        return;
+
+    m_setpoint = v;   // ← was indented wrong before
+    update();
+}
+
+void ThermostatDial::setCurrent(double v)
+{
+    m_current = v;
+    update();   // current temp is always allowed
+}
+
 QSize ThermostatDial::sizeHint() const
 {
     // Large default size so the circular layout has room to breathe.
@@ -102,14 +117,33 @@ void ThermostatDial::paintEvent(QPaintEvent* ev)
 
 void ThermostatDial::mousePressEvent(QMouseEvent* ev)
 {
-    if (ev->buttons() & Qt::LeftButton)
+    if (ev->buttons() & Qt::LeftButton){
+        m_ignoreSetpointUpdates = true;
         updateFromPos(ev->pos());
+    }
 }
 
 void ThermostatDial::mouseMoveEvent(QMouseEvent* ev)
 {
-    if (ev->buttons() & Qt::LeftButton)
+    if (ev->buttons() & Qt::LeftButton){
+        m_ignoreSetpointUpdates = true;
         updateFromPos(ev->pos());
+    }
+}
+
+void ThermostatDial::mouseReleaseEvent(QMouseEvent* ev)
+{
+    if (ev->button() == Qt::LeftButton) {
+        m_ignoreSetpointUpdates = false;
+        updateFromPos(ev->pos());
+    }
+    QWidget::mouseReleaseEvent(ev);
+}
+
+void ThermostatDial::tabletEvent(QTabletEvent* ev)
+{
+    if (ev->type() == QEvent::TabletRelease)
+        m_ignoreSetpointUpdates = false;
 }
 
 // Maps a mouse position to a temperature value using the same angle rules

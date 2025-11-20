@@ -1,65 +1,63 @@
 #pragma once
 
-
 #include <QObject>
-#include <QtMqtt/QMqttClient>
 #include <QTimer>
 #include <QDateTime>
-#include <deque>
 #include <QVector>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
 
-
-class Backend : public QObject {
-Q_OBJECT
+class Backend : public QObject
+{
+    Q_OBJECT
 public:
-explicit Backend(QObject* parent = nullptr);
+    explicit Backend(QObject* parent = nullptr);
 
+    QString time() const;
+    QString date() const;
 
-QString time() const;
-QString date() const;
-
-
-double setpoint() const;
-double currentTemp() const;
-
-
-QVector<int> powerMinutes() const; // minute-bucketed averages
-
+    double setpoint() const { return m_setpoint; }
+    double currentTemp() const { return m_current; }
+    QVector<int> powerMinutes() const { return m_powerMinutes; }  // last 240 minutes
 
 signals:
-void timeChanged();
-void powerNowChanged(int watts);
-void gasTodayChanged(double m3);
-void powerSeriesChanged();
-void thermostatChanged();
-
+    void timeChanged();
+    void powerNowChanged(int watts);
+    void gasTodayChanged(double m3);
+    void powerSeriesChanged();
+    void thermostatChanged();
 
 public slots:
-
+    void setThermostatSetpoint(double temperature);
 
 private slots:
-void onMessage(const QByteArray& payload, const QMqttTopicName& topic);
-
+    void pollData();
 
 private:
-// Lightweight minute-averaging ring buffer (240 samples)
-struct Pt { qint64 tMs; int avgW; };
-static constexpr int kBucketMs = 60*1000;
-static constexpr int kMaxPts = 240;
-std::deque<Pt> m_points;
-qint64 m_bucketStart = 0;
-qint64 m_sum = 0;
-int m_count = 0;
+    void fetchStates();
+    void fetchPowerHistory();
 
+    // ────── CONFIGURE THESE THREE LINES ONLY ──────
+    const QUrl m_baseUrl = QUrl("http://192.168.1.11:8123");
+    const QString m_token = "YOUR TOKEN";
+    // ───────────────────────────────────────────────
 
-void addInstantPower(int w, qint64 tsMs);
-void flushBucket();
+    const QString m_powerEntity   = "sensor.dsmr_reader_power_consumed";
+    const QString m_gasEntity     = "sensor.daily_gas";
+    const QString m_climateEntity = "climate.toon_thermostat_3";
 
+    QNetworkAccessManager* m_nam = nullptr;
+    QTimer m_clockTimer;
+    QTimer m_pollTimer;
 
-QMqttClient* m_mqtt = nullptr;
-QTimer m_clock;
+    double m_setpoint;
+    double m_current;
 
+    QVector<int> m_powerMinutes;      // 240 entries = last 4 hours
+    QDate m_gasReferenceDate;
+    double m_gasAtStartOfDay = 0.0;
+    double m_gasToday = 0.0;
 
-double m_setpoint = 21.0;
-double m_current = 20.0;
+    QTimer m_setpointDebounceTimer;
+    double m_pendingSetpoint = -1.0;
 };
