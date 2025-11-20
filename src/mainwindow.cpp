@@ -195,10 +195,17 @@ MainWindow::MainWindow(Backend* backend, QWidget* parent)
             bf.setBold(true);
             b->setFont(bf);
 
-            // Fixed the lambda syntax that was broken in your paste
             connect(b, &QPushButton::clicked, this, [this, temp = presets[idx].temp]() {
-                emit m_thermo->setpointEdited(double(temp));
-                m_thermo->setSetpoint(double(temp));
+                double t = double(temp);
+
+                // 1. Immediate visual feedback
+                m_thermo->setSetpoint(t);
+
+                // 2. Tell the dial to ignore HA for the next ~1.8 seconds
+                m_thermo->startIgnoreFromHA();
+
+                // 3. Send to backend → Home Assistant
+                m_thermo->setpointEdited(t);
             });
 
             presetsGrid->addWidget(b, r, c);

@@ -5,7 +5,6 @@
 #include <QJsonArray>
 #include <QUrlQuery>
 #include <QNetworkRequest>
-#include <QDebug>
 
 Backend::Backend(QObject* parent)
 : QObject(parent)
@@ -18,32 +17,9 @@ Backend::Backend(QObject* parent)
     connect(&m_pollTimer, &QTimer::timeout, this, &Backend::pollData);
     m_pollTimer.start(3000);
 
-
-
     pollData();
 
-    m_setpointDebounceTimer.setSingleShot(true);
-    m_setpointDebounceTimer.setInterval(600); // 600 ms after you stop dragging
-    connect(&m_setpointDebounceTimer, &QTimer::timeout, this, [this]() {
-        if (m_pendingSetpoint < 0.0) return;
-
-        // ←←← THIS is where we actually send to Home Assistant
-        QNetworkRequest req;
-        req.setRawHeader("Authorization", ("Bearer " + m_token).toUtf8());
-        req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-
-        QUrl url = m_baseUrl.resolved(QUrl("/api/services/climate/set_temperature"));
-        req.setUrl(url);
-
-        QJsonObject json;
-        json["entity_id"] = m_climateEntity;
-        json["temperature"] = m_pendingSetpoint;
-
-        QNetworkReply* reply = m_nam->post(req, QJsonDocument(json).toJson());
-        connect(reply, &QNetworkReply::finished, reply, &QNetworkReply::deleteLater);
-
-        m_pendingSetpoint = -1.0;
-    });
+    // ←←← Debounce timer completely removed
 }
 
 QString Backend::time() const { return QDateTime::currentDateTime().toString("HH:mm"); }
@@ -57,8 +33,22 @@ void Backend::pollData()
 
 void Backend::setThermostatSetpoint(double temperature)
 {
-    m_pendingSetpoint = temperature;
-    m_setpointDebounceTimer.start();
+    QNetworkRequest req;
+    req.setRawHeader("Authorization", ("Bearer " + m_token).toUtf8());
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+
+    QUrl url = m_baseUrl.resolved(QUrl("/api/services/climate/set_temperature"));
+    req.setUrl(url);
+
+    QJsonObject json;
+    json["entity_id"] = m_climateEntity;
+    json["temperature"] = temperature;
+
+    QNetworkReply* reply = m_nam->post(req, QJsonDocument(json).toJson());
+
+    connect(reply, &QNetworkReply::finished, this, [reply]() {
+        reply->deleteLater();
+    });
 }
 
 void Backend::fetchStates()

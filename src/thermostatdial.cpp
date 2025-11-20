@@ -7,15 +7,26 @@
 ThermostatDial::ThermostatDial(QWidget* parent)
 : QWidget(parent)
 {
+    m_ignoreTimer.setSingleShot(true);
+    connect(&m_ignoreTimer, &QTimer::timeout, this, [this]() {
+        m_ignoreFromHA = false;
+    });
 }
 
 void ThermostatDial::setSetpoint(double v)
 {
+    // Completely ignore updates from Home Assistant shortly after user interaction
+    if (m_ignoreFromHA)
+        return;
+
+    // Only ignore while actively dragging (old behaviour stays for safety)
     if (m_ignoreSetpointUpdates)
         return;
 
-    m_setpoint = v;   // ← was indented wrong before
-    update();
+    if (!qFuzzyCompare(v, m_setpoint)) {
+        m_setpoint = v;
+        update();
+    }
 }
 
 void ThermostatDial::setCurrent(double v)
@@ -117,17 +128,17 @@ void ThermostatDial::paintEvent(QPaintEvent* ev)
 
 void ThermostatDial::mousePressEvent(QMouseEvent* ev)
 {
-    if (ev->buttons() & Qt::LeftButton){
+    if (ev->buttons() & Qt::LeftButton) {
         m_ignoreSetpointUpdates = true;
+        m_finalSetpointToSend = m_setpoint;  // initialise
         updateFromPos(ev->pos());
     }
 }
 
 void ThermostatDial::mouseMoveEvent(QMouseEvent* ev)
 {
-    if (ev->buttons() & Qt::LeftButton){
-        m_ignoreSetpointUpdates = true;
-        updateFromPos(ev->pos());
+    if (ev->buttons() & Qt::LeftButton) {
+        updateFromPos(ev->pos());  // only visual + store final value
     }
 }
 
@@ -135,7 +146,16 @@ void ThermostatDial::mouseReleaseEvent(QMouseEvent* ev)
 {
     if (ev->button() == Qt::LeftButton) {
         m_ignoreSetpointUpdates = false;
-        updateFromPos(ev->pos());
+        updateFromPos(ev->pos());   // in case mouse left the arc
+
+        // ←←← NOW we send exactly ONE request with the final temperature
+        if (m_finalSetpointToSend >= 0.0) {
+            emit setpointEdited(m_finalSetpointToSend);
+        }
+
+        // Block HA echo for 1.8 seconds so the dial never jumps back
+        m_ignoreFromHA = true;
+        m_ignoreTimer.start(1800);
     }
     QWidget::mouseReleaseEvent(ev);
 }
@@ -178,8 +198,8 @@ void ThermostatDial::updateFromPos(const QPoint& p)
 
         if (!qFuzzyCompare(newSp, m_setpoint)) {
             m_setpoint = newSp;
-            emit setpointEdited(m_setpoint);
-            update();
+            m_finalSetpointToSend = newSp;   // ← remember for release
+            update();                        // visual feedback only
         }
     }
 }

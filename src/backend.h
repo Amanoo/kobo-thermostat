@@ -57,7 +57,4 @@ private:
     QDate m_gasReferenceDate;
     double m_gasAtStartOfDay = 0.0;
     double m_gasToday = 0.0;
-
-    QTimer m_setpointDebounceTimer;
-    double m_pendingSetpoint = -1.0;
 };
