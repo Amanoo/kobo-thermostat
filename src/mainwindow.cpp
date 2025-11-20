@@ -197,6 +197,7 @@ MainWindow::MainWindow(Backend* backend, QWidget* parent)
 
             // Fixed the lambda syntax that was broken in your paste
             connect(b, &QPushButton::clicked, this, [this, temp = presets[idx].temp]() {
+                emit m_thermo->setpointEdited(double(temp));
                 m_thermo->setSetpoint(double(temp));
             });
 
