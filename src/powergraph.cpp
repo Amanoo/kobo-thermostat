@@ -1,4 +1,3 @@
-// powergraph.cpp
 #include "powergraph.h"
 
 #include <QPainter>
@@ -35,8 +34,8 @@ void PowerGraph::paintEvent(QPaintEvent *)
     int minVal = 0;
     int maxVal = *std::max_element(m_points.cbegin(), m_points.cend());
     if (maxVal == 0) maxVal = 1;
-    if (maxVal < 100)
-        maxVal = 100;
+    if (maxVal < 900)
+        maxVal = 900;
 
     const int margin = 10;
     QRectF area = rect().adjusted(margin, margin, -margin, -margin);

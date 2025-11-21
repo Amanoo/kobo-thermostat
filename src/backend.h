@@ -46,6 +46,9 @@ private:
     const QString m_gasEntity     = "sensor.daily_gas";
     const QString m_climateEntity = "climate.toon_thermostat_3";
 
+    QTimer m_powerGraphUpdateTimer;   // NEW: controls UI refresh rate
+    bool m_firstPowerHistory = true;  // force immediate update on first fetch
+
     QNetworkAccessManager* m_nam = nullptr;
     QTimer m_clockTimer;
     QTimer m_pollTimer;

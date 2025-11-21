@@ -16,12 +16,19 @@ Backend::Backend(QObject* parent)
     connect(&m_clockTimer, &QTimer::timeout, this, &Backend::timeChanged);
     m_clockTimer.start(1000);
 
+    // Poll everything every 3 seconds (your current rate – keep it for responsiveness)
     connect(&m_pollTimer, &QTimer::timeout, this, &Backend::pollData);
     m_pollTimer.start(3000);
 
-    pollData();
+    // NEW: Update graph UI only every 5 minutes (and on first fetch)
+    connect(&m_powerGraphUpdateTimer, &QTimer::timeout, this, [this]() {
+        if (!m_powerMinutes.isEmpty()) {
+            emit powerSeriesChanged();
+        }
+    });
+    m_powerGraphUpdateTimer.start(5 * 60 * 1000);  // 5 minutes
 
-    // ←←← Debounce timer completely removed
+    pollData();  // initial load
 }
 
 QString Backend::time() const { return QDateTime::currentDateTime().toString("HH:mm"); }
@@ -225,7 +232,13 @@ void Backend::fetchPowerHistory()
         // --- Push to UI only if changed --------------------------------------
         if (m_powerMinutes != result) {
             m_powerMinutes = result;
-            emit powerSeriesChanged();
+
+            // Emit immediately on first successful fetch
+            // OR when the 5-minute timer fires (it will trigger emit separately)
+            if (m_firstPowerHistory) {
+                m_firstPowerHistory = false;
+                emit powerSeriesChanged();
+            }
         }
     });
 }
