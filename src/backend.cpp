@@ -1,10 +1,12 @@
 #include "backend.h"
 
+//#include <qfile.h>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QUrlQuery>
 #include <QNetworkRequest>
+//#include <QDir>
 
 Backend::Backend(QObject* parent)
 : QObject(parent)
@@ -111,14 +113,20 @@ void Backend::fetchStates()
 
 void Backend::fetchPowerHistory()
 {
-    // ←←← FIXED: pass a QUrl, not a string
     QUrl url = m_baseUrl.resolved(QUrl("/api/history/period"));
     QUrlQuery query;
     query.addQueryItem("filter_entity_id", m_powerEntity);
     query.addQueryItem("minimal_response", "");
     query.addQueryItem("significant_changes_only", "false");
 
-    QDateTime start = QDateTime::currentDateTimeUtc().addSecs(-4*3600 - 600);
+    // --- Time window and binning configuration ------------------------------
+    constexpr int WINDOW_MINUTES      = 180;        // last 3 hours
+    constexpr int WINDOW_SECONDS      = WINDOW_MINUTES * 60;
+    constexpr int BIN_SECONDS         = 30;         // 30s per bucket
+    constexpr int TOTAL_BINS          = WINDOW_SECONDS / BIN_SECONDS; // 360
+    constexpr int EXTRA_SECONDS       = 600;        // 10 minutes extra when querying
+
+    QDateTime start = QDateTime::currentDateTimeUtc().addSecs(-WINDOW_SECONDS - EXTRA_SECONDS);
     query.addQueryItem("start_time", start.toString(Qt::ISODate));
     query.addQueryItem("end_time",   QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
     url.setQuery(query);
@@ -140,34 +148,77 @@ void Backend::fetchPowerHistory()
 
         QJsonArray history = entities[0].toArray();
 
-        QVector<qint64> sums(240, 0);
-        QVector<int>    counts(240, 0);
+        // --- 30-second buckets ------------------------------------------------
+        constexpr int WINDOW_MINUTES = 180;
+        constexpr int WINDOW_SECONDS = WINDOW_MINUTES * 60;
+        constexpr int BIN_SECONDS    = 60;
+        constexpr int TOTAL_BINS     = WINDOW_SECONDS / BIN_SECONDS; // 360
+
+        QVector<qint64> sums(TOTAL_BINS, 0);
+        QVector<int>    counts(TOTAL_BINS, 0);
+
+        QDateTime nowUtc = QDateTime::currentDateTimeUtc();
 
         for (const QJsonValue& v : history) {
             QJsonObject o = v.toObject();
-            QString s = o["s"].toString();
-            if (s.isEmpty()) continue;
+
+            QString s = o["state"].toString();
+            if (s.isEmpty())
+                continue;
 
             double kw = s.toDouble();
             int watts = qRound(kw * 1000);
 
-            QDateTime ts = QDateTime::fromString(o["lc"].toString(), Qt::ISODateWithMs);
-            if (!ts.isValid()) continue;
+            QString tsStr = o["last_updated"].toString();
+            if (tsStr.isEmpty())
+                tsStr = o["last_changed"].toString();
+            if (tsStr.isEmpty())
+                continue;
 
-            qint64 minsAgo = ts.secsTo(QDateTime::currentDateTime()) / 60;
-            if (minsAgo < 0 || minsAgo >= 240) continue;
+            QDateTime ts = QDateTime::fromString(tsStr, Qt::ISODateWithMs);
+            bool tsOk = ts.isValid();
+            if (tsOk)
+                ts = ts.toUTC();
 
-            int idx = static_cast<int>(minsAgo);
-            sums[idx] += watts;
-            counts[idx]++;
+            if (!tsOk)
+                continue;
+
+            qint64 secsAgo = ts.secsTo(nowUtc);
+            if (secsAgo < 0 || secsAgo >= WINDOW_SECONDS)
+                continue;   // outside the 3h window
+
+            int bin = static_cast<int>(secsAgo / BIN_SECONDS);   // 0..359 (newest: small bin)
+            if (bin < 0 || bin >= TOTAL_BINS)
+                continue;
+
+            // Reverse so oldest is left, newest is right
+            int idx = TOTAL_BINS - 1 - bin;                      // 0..359
+            sums[idx]   += watts;
+            counts[idx] += 1;
         }
 
-        QVector<int> result(240);
-        for (int i = 0; i < 240; ++i) {
-            // ←←← FIXED: cast to double to avoid qRound() ambiguity
-            result[i] = counts[i] > 0 ? qRound(static_cast<double>(sums[i]) / counts[i]) : 0;
+        // --- Build final 360-point series (average per bucket) ---------------
+        QVector<int> result(TOTAL_BINS);
+        for (int i = 0; i < TOTAL_BINS; ++i) {
+            result[i] = counts[i] > 0
+                        ? qRound(static_cast<double>(sums[i]) / counts[i])
+                        : 0;
         }
 
+        // --- Optional: log the final series to CSV ---------------------------
+        /**QString logPath = QDir::homePath() + "/power_history_debug.csv";
+        QFile logFile(logPath);
+        if (logFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            QTextStream log(&logFile);
+            log << "index,watts\n";
+            for (int i = 0; i < result.size(); ++i) {
+                log << i << ',' << result[i] << '\n';
+            }
+            logFile.flush();
+            logFile.close();
+        }**/
+
+        // --- Push to UI only if changed --------------------------------------
         if (m_powerMinutes != result) {
             m_powerMinutes = result;
             emit powerSeriesChanged();

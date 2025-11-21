@@ -53,7 +53,7 @@ private:
     double m_setpoint;
     double m_current;
 
-    QVector<int> m_powerMinutes;      // 240 entries = last 4 hours
+    QVector<int> m_powerMinutes;      // 360 entries = last 3 hours (30s per sample)
     QDate m_gasReferenceDate;
     double m_gasAtStartOfDay = 0.0;
     double m_gasToday = 0.0;

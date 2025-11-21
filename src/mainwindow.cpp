@@ -106,12 +106,12 @@ MainWindow::MainWindow(Backend* backend, QWidget* parent)
     gasLayout->addStretch(1);
     leftLayout->addWidget(gasFrame, 0, 1);
 
-    // Power graph (last 4 hours)
+    // Power graph (last 3 hours)
     QFrame* powerGraphFrame = new QFrame(leftWidget);
     makeCard(powerGraphFrame);
     QVBoxLayout* powerGraphLayout = new QVBoxLayout(powerGraphFrame);
     powerGraphLayout->setSpacing(4);
-    powerGraphLayout->addWidget(makeTitle("Power (last 4 hours)", powerGraphFrame));
+    powerGraphLayout->addWidget(makeTitle("Power (last 3 hours)", powerGraphFrame));
 
     m_powerGraph = new PowerGraph(powerGraphFrame);
     powerGraphLayout->addWidget(m_powerGraph, 1);
