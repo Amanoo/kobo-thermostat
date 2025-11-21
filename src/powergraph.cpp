@@ -32,9 +32,11 @@ void PowerGraph::paintEvent(QPaintEvent *)
     QColor lineColor = darkMode ? QColor("#DDDDDD") : QColor("#222222");
 
     // min/max calculation
-    int minVal = *std::min_element(m_points.cbegin(), m_points.cend());
+    int minVal = 0;
     int maxVal = *std::max_element(m_points.cbegin(), m_points.cend());
-    if (maxVal == minVal) maxVal = minVal + 1;
+    if (maxVal == 0) maxVal = 1;
+    if (maxVal < 100)
+        maxVal = 100;
 
     const int margin = 10;
     QRectF area = rect().adjusted(margin, margin, -margin, -margin);
@@ -44,7 +46,17 @@ void PowerGraph::paintEvent(QPaintEvent *)
     p.setPen(borderPen);
     p.drawRect(area);
 
-    // <<< THE ACTUAL FIX IS HERE >>>
+    // --- peak label ---------------------------------------------------------
+    QFont peakFont = p.font();
+    peakFont.setPointSize(10);
+    p.setFont(peakFont);
+    p.setPen(darkMode ? QColor("#DDDDDD") : QColor("#333333"));
+
+    QString peakText = QString::number(maxVal) + " W";
+    // small rect near top‑right inside the graph area
+    QRectF labelRect(area.right() - 80, area.top(), 75, 18);
+    p.drawText(labelRect, Qt::AlignRight | Qt::AlignVCenter, peakText);
+
     QPainterPath path;               // this now compiles because of the includes above
     int n = m_points.size();
 

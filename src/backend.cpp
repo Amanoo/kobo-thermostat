@@ -120,13 +120,17 @@ void Backend::fetchPowerHistory()
     query.addQueryItem("significant_changes_only", "false");
 
     // --- Time window and binning configuration ------------------------------
-    constexpr int WINDOW_MINUTES      = 180;        // last 3 hours
+    constexpr int WINDOW_MINUTES      = 360;        // last 3 hours
     constexpr int WINDOW_SECONDS      = WINDOW_MINUTES * 60;
     constexpr int BIN_SECONDS         = 30;         // 30s per bucket
     constexpr int TOTAL_BINS          = WINDOW_SECONDS / BIN_SECONDS; // 360
-    constexpr int EXTRA_SECONDS       = 600;        // 10 minutes extra when querying
 
-    QDateTime start = QDateTime::currentDateTimeUtc().addSecs(-WINDOW_SECONDS - EXTRA_SECONDS);
+    QDateTime start = QDateTime::currentDateTimeUtc().addSecs(-WINDOW_SECONDS);
+    start.setTime(QTime(start.time().hour(), start.time().minute(), 0, 0));
+
+    QDateTime end = QDateTime::currentDateTimeUtc();
+    end.setTime(QTime(end.time().hour(), end.time().minute(), 0, 0));
+
     query.addQueryItem("start_time", start.toString(Qt::ISODate));
     query.addQueryItem("end_time",   QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
     url.setQuery(query);
