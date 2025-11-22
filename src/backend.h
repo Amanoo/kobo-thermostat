@@ -19,6 +19,7 @@ public:
     double setpoint() const { return m_setpoint; }
     double currentTemp() const { return m_current; }
     QVector<int> powerMinutes() const { return m_powerMinutes; }  // last 240 minutes
+    bool heatingActive() const { return m_heatingActive; }
 
 signals:
     void timeChanged();
@@ -60,4 +61,6 @@ private:
     QDate m_gasReferenceDate;
     double m_gasAtStartOfDay = 0.0;
     double m_gasToday = 0.0;
+
+    bool m_heatingActive = false;
 };

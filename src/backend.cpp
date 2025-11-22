@@ -102,12 +102,30 @@ void Backend::fetchStates()
             }
             else if (entity == m_climateEntity) {
                 QJsonObject attr = obj["attributes"].toObject();
+
+                // Existing code
                 double sp  = attr["temperature"].toDouble(m_setpoint);
                 double cur = attr["current_temperature"].toDouble(m_current);
+
+                // ────── NEW: detect if the burner is active ──────
+                QString hvacAction = attr["hvac_action"].toString().toLower();
+                bool heating = (hvacAction == "heating");
+
+                // Fallback for very old HA versions that still use the old field
+                if (!heating) {
+                    QString activity = attr["current_activity"].toString().toLower();
+                    heating = (activity == "heat");
+                }
+                // ────── END NEW ──────
 
                 bool changed = false;
                 if (!qFuzzyCompare(sp, m_setpoint)) { m_setpoint = sp; changed = true; }
                 if (!qFuzzyCompare(cur, m_current))  { m_current  = cur; changed = true; }
+                if (heating != m_heatingActive) {           // <-- add member bool m_heatingActive = false;
+                    m_heatingActive = heating;
+                    changed = true;
+                }
+
                 if (changed) emit thermostatChanged();
             }
         });

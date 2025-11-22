@@ -242,7 +242,10 @@ MainWindow::MainWindow(Backend* backend, QWidget* parent)
     connect(backend, &Backend::thermostatChanged, this, [this]{
         m_thermo->setSetpoint(m_backend->setpoint());
         m_thermo->setCurrent(m_backend->currentTemp());
+        m_thermo->setHeatingActive(m_backend->heatingActive());
     });
+
+    m_thermo->setHeatingActive(m_backend->heatingActive());
 
     // Optional: forward manual changes from dial back to backend
     connect(m_thermo, &ThermostatDial::setpointEdited,
