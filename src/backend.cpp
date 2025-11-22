@@ -26,7 +26,7 @@ Backend::Backend(QObject* parent)
             emit powerSeriesChanged();
         }
     });
-    m_powerGraphUpdateTimer.start(5 * 60 * 1000);  // 5 minutes
+    m_powerGraphUpdateTimer.start(2 * 60 * 1000);  // 2 minutes
 
     pollData();  // initial load
 }

@@ -45,17 +45,6 @@ void PowerGraph::paintEvent(QPaintEvent *)
     p.setPen(borderPen);
     p.drawRect(area);
 
-    // --- peak label ---------------------------------------------------------
-    QFont peakFont = p.font();
-    peakFont.setPointSize(10);
-    p.setFont(peakFont);
-    p.setPen(darkMode ? QColor("#DDDDDD") : QColor("#333333"));
-
-    QString peakText = QString::number(maxVal) + " W";
-    // small rect near top‑right inside the graph area
-    QRectF labelRect(area.right() - 80, area.top(), 75, 18);
-    p.drawText(labelRect, Qt::AlignRight | Qt::AlignVCenter, peakText);
-
     QPainterPath path;               // this now compiles because of the includes above
     int n = m_points.size();
 
