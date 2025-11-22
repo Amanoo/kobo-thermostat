@@ -44,7 +44,7 @@ MainWindow::MainWindow(Backend* backend, QWidget* parent)
         QLabel* label = new QLabel(text, parent);
         label->setAlignment(Qt::AlignCenter);
         QFont f = label->font();
-        f.setPointSize(22);
+        f.setPointSize(19);
         f.setBold(true);
         label->setFont(f);
         label->setContentsMargins(0, 6, 0, 8);
@@ -89,7 +89,7 @@ MainWindow::MainWindow(Backend* backend, QWidget* parent)
     makeCard(gasFrame);
     QVBoxLayout* gasLayout = new QVBoxLayout(gasFrame);
     gasLayout->setSpacing(4);
-    gasLayout->addWidget(makeTitle("Gas Today", gasFrame));
+    gasLayout->addWidget(makeTitle("Gas vandaag", gasFrame));
     gasFrame->setMaximumWidth(180);
 
     m_gasBar = new UsageBar(gasFrame);
@@ -111,7 +111,7 @@ MainWindow::MainWindow(Backend* backend, QWidget* parent)
     makeCard(powerGraphFrame);
     QVBoxLayout* powerGraphLayout = new QVBoxLayout(powerGraphFrame);
     powerGraphLayout->setSpacing(4);
-    powerGraphLayout->addWidget(makeTitle("Power (last 3 hours)", powerGraphFrame));
+    powerGraphLayout->addWidget(makeTitle("Stroom afgelopen 3 uur", powerGraphFrame));
 
     m_powerGraph = new PowerGraph(powerGraphFrame);
     powerGraphLayout->addWidget(m_powerGraph, 1);
@@ -122,7 +122,7 @@ MainWindow::MainWindow(Backend* backend, QWidget* parent)
     makeCard(powerNowFrame);
     QVBoxLayout* powerNowLayout = new QVBoxLayout(powerNowFrame);
     powerNowLayout->setSpacing(4);
-    powerNowLayout->addWidget(makeTitle("Power Now", powerNowFrame));
+    powerNowLayout->addWidget(makeTitle("Stroom nu", powerNowFrame));
     powerNowFrame->setMaximumWidth(180);
 
     m_powerBar = new UsageBar(powerNowFrame);
@@ -180,8 +180,8 @@ MainWindow::MainWindow(Backend* backend, QWidget* parent)
     presetsFrame->setMaximumWidth(460);
 
     struct Preset { const char* name; int temp; } presets[] = {
-        {"Away\n(15°C)", 15}, {"Sleep\n(17°C)", 17},
-        {"Home\n(19°C)", 19}, {"Comfort\n(21°C)", 21}
+        {"Weg\n(15°C)", 15}, {"Slaap\n(17°C)", 17},
+        {"Thuis\n(19°C)", 19}, {"Comfort\n(21°C)", 21}
     };
 
     int idx = 0;

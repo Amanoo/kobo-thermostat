@@ -109,7 +109,7 @@ void ThermostatDial::paintEvent(QPaintEvent* ev)
                    r.width(), r.height() * 0.3);
 
     p.drawText(nowRect, Qt::AlignCenter,
-               QString("Now %1°C").arg(QString::number(m_current, 'f', 1)));
+               QString("Nu %1°C").arg(QString::number(m_current, 'f', 1)));
 
     // --- Flame icon (displayed only when heating is off) --------------------
     if (m_heating) {
