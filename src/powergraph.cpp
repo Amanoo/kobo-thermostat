@@ -30,12 +30,29 @@ void PowerGraph::paintEvent(QPaintEvent *)
     bool darkMode = palette().window().color().lightness() < 128;
     QColor lineColor = darkMode ? QColor("#DDDDDD") : QColor("#222222");
 
-    // min/max calculation
+    // ────── NEW SCALING LOGIC ──────
+    int maxVal = 0;
+    if (!m_points.isEmpty()) {
+        maxVal = *std::max_element(m_points.cbegin(), m_points.cend());
+    }
+
+    const int STEP = 500;
+    const int HYSTERESIS = 50;           // jump early when within 50 W of ceiling
+
+    // Round up to next 500 W boundary
+    int ceiling = ((maxVal + STEP - 1) / STEP) * STEP;
+
+    // If we’re within HYSTERESIS of the current ceiling → jump to next one
+    if (maxVal > 0 && (ceiling - maxVal) < HYSTERESIS) {
+        ceiling += STEP;
+    }
+
+    // Hard minimum so the graph never looks completely flat
+    if (ceiling < 1000) ceiling = 1000;
+
     int minVal = 0;
-    int maxVal = *std::max_element(m_points.cbegin(), m_points.cend());
-    if (maxVal == 0) maxVal = 1;
-    if (maxVal < 900)
-        maxVal = 900;
+    int range = ceiling - minVal;
+    // ────── END NEW SCALING ──────
 
     const int margin = 10;
     QRectF area = rect().adjusted(margin, margin, -margin, -margin);
@@ -50,7 +67,7 @@ void PowerGraph::paintEvent(QPaintEvent *)
 
     for (int i = 0; i < n; ++i) {
         qreal x = area.left() + i * area.width() / qreal(n - 1);
-        qreal norm = (m_points[i] - minVal) / qreal(maxVal - minVal);
+        qreal norm = (m_points[i] - minVal) / qreal(range);
         qreal y = area.bottom() - norm * area.height();
 
         if (i == 0)

@@ -227,12 +227,12 @@ MainWindow::MainWindow(Backend* backend, QWidget* parent)
 
     connect(backend, &Backend::powerNowChanged, this, [this](int w){
         m_powerLabel->setText(QString::number(w) + " W");
-        m_powerBar->setValue(qMin(1.0, w / 4000.0));
+        m_powerBar->setValue(qMin(1.0, w / 3000.0));
     });
 
     connect(backend, &Backend::gasTodayChanged, this, [this](double m3){
         m_gasLabel->setText(QString::number(m3, 'f', 2) + " m³");
-        m_gasBar->setValue(qMin(1.0, m3 / 5.0));
+        m_gasBar->setValue(qMin(1.0, m3 / 4.0));
     });
 
     connect(backend, &Backend::powerSeriesChanged, this, [this]{
