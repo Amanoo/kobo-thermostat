@@ -20,11 +20,14 @@ public:
     double currentTemp() const { return m_current; }
     QVector<int> powerMinutes() const { return m_powerMinutes; }  // last 240 minutes
     bool heatingActive() const { return m_heatingActive; }
+    double gasToday() const { return m_gasToday; }
+    double gasDailyMax() const { return m_gasDailyMax; }
 
 signals:
     void timeChanged();
     void powerNowChanged(int watts);
     void gasTodayChanged(double m3);
+    void gasDailyMaxChanged(double maxM3);
     void powerSeriesChanged();
     void thermostatChanged();
 
@@ -46,6 +49,7 @@ private:
     const QString m_powerEntity   = "sensor.dsmr_reader_power_consumed";
     const QString m_gasEntity     = "sensor.daily_gas";
     const QString m_climateEntity = "climate.toon_thermostat_3";
+    const QString m_gasMaxEntity = "input_number.gas_daily_max";
 
     QTimer m_powerGraphUpdateTimer;   // NEW: controls UI refresh rate
     bool m_firstPowerHistory = true;  // force immediate update on first fetch
@@ -61,6 +65,7 @@ private:
     QDate m_gasReferenceDate;
     double m_gasAtStartOfDay = 0.0;
     double m_gasToday = 0.0;
+    double m_gasDailyMax = 4.0;
 
     bool m_heatingActive = false;
 };

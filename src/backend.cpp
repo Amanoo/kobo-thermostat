@@ -128,11 +128,20 @@ void Backend::fetchStates()
 
                 if (changed) emit thermostatChanged();
             }
+            else if (entity == m_gasMaxEntity) {
+                bool ok = false;
+                double newMax = state.toDouble(&ok);
+                if (ok && newMax > 0.1 && !qFuzzyCompare(newMax, m_gasDailyMax)) {
+                    m_gasDailyMax = newMax;
+                    emit gasDailyMaxChanged(newMax);
+                }
+            }
         });
     };
 
     getState(m_powerEntity);
     getState(m_gasEntity);
+    getState(m_gasMaxEntity);
     getState(m_climateEntity);
 }
 

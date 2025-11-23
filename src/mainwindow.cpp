@@ -230,10 +230,16 @@ MainWindow::MainWindow(Backend* backend, QWidget* parent)
         m_powerBar->setValue(qMin(1.0, w / 3000.0));
     });
 
-    connect(backend, &Backend::gasTodayChanged, this, [this](double m3){
-        m_gasLabel->setText(QString::number(m3, 'f', 2) + " m³");
-        m_gasBar->setValue(qMin(1.0, m3 / 4.0));
-    });
+    auto updateGasBar = [this]() {
+        double current = m_backend->gasToday();
+        double max = qMax(0.5, m_backend->gasDailyMax());
+        double fraction = current / max;
+        m_gasBar->setValue(qMin(1.0, fraction));
+        m_gasLabel->setText(QString::number(current, 'f', 2) + " m³");
+    };
+
+    connect(backend, &Backend::gasTodayChanged,      this, updateGasBar);
+    connect(backend, &Backend::gasDailyMaxChanged,   this, updateGasBar);
 
     connect(backend, &Backend::powerSeriesChanged, this, [this]{
         m_powerGraph->setPoints(m_backend->powerMinutes());
